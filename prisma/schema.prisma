@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  username  String    @unique @db.VarChar(120)
+  password  String    @db.VarChar(256)
+  createdAt DateTime  @default(now()) @db.Timestamp
+  updatedAt DateTime? @db.Timestamp
+  role      Role?     @default(USER)
+
+  banners  Banner[]  @relation("user_created_banner")
+  products Product[] @relation("user_created_product")
+  productLines ProductLine[] @relation("user_created_productLine")
+  Banner   Banner[]  @relation("user_updated_banner")
+  Product  Product[] @relation("user_updated_product")
+  ProductLine  ProductLine[] @relation("user_updated_productLine")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Media {
+  id                Int          @id @default(autoincrement())
+  path              String       @db.VarChar(5000)
+  filename          String       @db.VarChar(250)
+  filename_original String       @db.VarChar(250)
+  extension         String       @db.VarChar(50)
+  mimetype          String       @db.VarChar(50)
+  Banner            Banner[]
+  Product           Product[]
+  ProductLine       ProductLine[]
+}
+
+model Banner {
+  id            Int       @id @default(autoincrement())
+  media_id      Int
+  title         String    @db.VarChar(256)
+  link          String    @db.VarChar(2000)
+  available     Boolean   @default(true)
+  userCreatedId Int
+  createdAt     DateTime  @default(now()) @db.Timestamp
+  userUpdatedId Int?
+  updatedAt     DateTime? @db.Timestamp
+
+  media     Media @relation(fields: [media_id], references: [id])
+  createdBy User  @relation(name: "user_created_banner", fields: [userCreatedId], references: [id])
+  updatedBy User? @relation(name: "user_updated_banner", fields: [userUpdatedId], references: [id])
+}
+
+model Product {
+  id             Int       @id @default(autoincrement())
+  productLine_id Int
+  media_id       Int
+  title          String    @db.VarChar(256)
+  unitWeight     String    @db.VarChar(256)
+  description    String    @db.VarChar(2000)
+  preparation    String    @db.Text
+  ingredient     String    @db.Text
+  nutritional    String    @db.Text
+  friendlyUrl    String    @db.VarChar(256)
+  available      Boolean   @default(true)
+  userCreatedId  Int
+  createdAt      DateTime  @default(now()) @db.Timestamp
+  userUpdatedId  Int?
+  updatedAt      DateTime? @db.Timestamp
+
+  productLine ProductLine @relation(fields: [productLine_id], references: [id])
+  media     Media      @relation(fields: [media_id], references: [id])
+  createdBy User       @relation(name: "user_created_product", fields: [userCreatedId], references: [id])
+  updatedBy User?      @relation(name: "user_updated_product", fields: [userUpdatedId], references: [id])
+}
+
+model Contact {
+  id         Int       @id @default(autoincrement())
+  fullname   String    @db.VarChar(256)
+  email      String    @db.VarChar(256)
+  cellphone  String    @db.VarChar(50)
+  city       String    @db.VarChar(256)
+  state      String    @db.VarChar(256)
+  message    String    @db.VarChar(4000)
+  createdAt  DateTime  @default(now()) @db.Timestamp
+  updatedAt  DateTime? @db.Timestamp
+}
+
+model ProductLine {
+  id            Int       @id @default(autoincrement())
+  media_id      Int
+  title         String    @db.VarChar(256)
+  friendlyUrl   String    @db.VarChar(256)
+  description   String    @db.VarChar(2000)
+  available     Boolean   @default(true)
+  userCreatedId Int
+  createdAt     DateTime  @default(now()) @db.Timestamp
+  userUpdatedId Int?
+  updatedAt     DateTime? @db.Timestamp
+
+  media     Media @relation(fields: [media_id], references: [id])
+  createdBy User  @relation(name: "user_created_productLine", fields: [userCreatedId], references: [id])
+  updatedBy User? @relation(name: "user_updated_productLine", fields: [userUpdatedId], references: [id])
+  Product   Product[]
+}
